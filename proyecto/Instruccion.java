@@ -2,7 +2,7 @@ package proyecto;
 
 public class Instruccion {
 
-	private enum Tipo {
+	protected enum Tipo {
 		ADD(1),
 		SUB(1),
 		AND(1),
@@ -32,9 +32,9 @@ public class Instruccion {
 		}
 
 		public static Tipo bin2Tipo(short raw){
-			int opcode = raw & (short)0b1111000000000000;
+			int opcode = raw >> 12;
 			int id, b;
-			opcode = opcode >> 12;
+			opcode = opcode & 0b00001111;
 
 			switch (opcode){
 				case 1:
@@ -229,15 +229,19 @@ public class Instruccion {
 	}
 
 	public void print(){
-		System.out.print("\nRD " + this.RD);
-		System.out.print("\nRS1 " + this.RS1);
-		System.out.print("\nRS2 " + this.RS2);
-		System.out.print("\nRS3 " + this.RS3);
-		System.out.print("\nInm " + this.Inm);
-		System.out.print("\nSH " + this.SH);
-		System.out.print("\nCC " + this.CC);
-		System.out.print("\nPCOffset " + this.PCOffset);
-		System.out.print("\nRB " + this.RB);
-		System.out.print("\nvect " + this.vect);
+		System.out.println("");
+		System.out.println(this.OPCODE.name());
+		System.out.println("RD " + this.RD);
+		System.out.println("RS1 " + this.RS1);
+		System.out.println("RS2 " + this.RS2);
+		System.out.println("RS3 " + this.RS3);
+		System.out.println("Inm " + this.Inm);
+		System.out.println("SH " + this.SH);
+		System.out.println("CC " + this.CC);
+		System.out.println("PCOffset " + this.PCOffset);
+		System.out.println("RB " + this.RB);
+		System.out.println("vect " + this.vect);
+		System.out.println("");
+
 	}
 }

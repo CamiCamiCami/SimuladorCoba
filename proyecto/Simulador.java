@@ -8,7 +8,7 @@ import java.io.FileNotFoundException;
 public class Simulador {
 
 	private static int PC = 0;
-	private static short[] registros = new short[8];
+	private static short[] r = new short[8];
 	private static Memory memoria = new Memory();
 	private static final int PALABRA = 16;
 
@@ -63,7 +63,23 @@ public class Simulador {
 	}
 
 	private static void runInstruction(Instruccion ins){
-		ins.print();
+		switch (ins.OPCODE) {
+			case ADD:
+				r[ins.RD] = (short)(r[ins.RS1] + r[ins.RS2]);
+				break;
+			case SUB:
+				r[ins.RD] = (short)(r[ins.RS1] - r[ins.RS2]);
+				break;
+			case AND:
+				r[ins.RD] = (short)(r[ins.RS1] & r[ins.RS2]);
+				break;
+			case OR:
+				r[ins.RD] = (short)(r[ins.RS1] | r[ins.RS2]);
+				break;
+			case ADDI:
+				r[ins.RD] = (short)(r[ins.RS1] + ins.Inm);
+				break;
+		}
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -79,10 +95,8 @@ public class Simulador {
 			System.out.println("Falta un argumento indicando el archivo que contiene el codigo a ejecutar");
 			System.exit(1);
 		}
-
-		memoria.print(3000, 3020);
-		/*
-		int cont = 30;
+		
+		int cont = 22;
 		while (cont > 0){
 			short raw = memoria.get(PC);
 			Instruccion ins = new Instruccion(raw);
@@ -90,7 +104,7 @@ public class Simulador {
 			PC++;
 			cont--;
 		}
-		*/
+		
 		memoria.close();
 	}
 }
