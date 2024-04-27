@@ -21,7 +21,7 @@ public class Memory {
 		}
 	}
 
-	private void setDir(short dir) throws IOException {
+	private void setDir(int dir) throws IOException {
 		long curr = FILE.getFilePointer();
 		long new_p = dir * 2;
 		if (curr != new_p){
@@ -29,18 +29,18 @@ public class Memory {
 		}
 	}
 	
-	public short get(short dir) throws IOException {
+	public short get(int dir) throws IOException {
 		setDir(dir);
 		return FILE.readShort();
 	}
 
-	public void put(short dir, short data) throws IOException {
+	public void put(int dir, short data) throws IOException {
 		setDir(dir);
 		FILE.writeShort(data);
 	}
 
 	public void nukeMemory() throws IOException {
-		setDir((short)0);
+		setDir(0);
 		for(int i = 0; i < 65536; i++){
 			FILE.writeShort(-24187);
 		}
@@ -62,7 +62,7 @@ public class Memory {
 		return bin;
 	}
 
-	public void print(short start, short end) throws IOException {
+	public void print(int start, int end) throws IOException {
 		setDir(start);
 		for (int i=start; i < end; i++){
 			short cont = FILE.readShort();
