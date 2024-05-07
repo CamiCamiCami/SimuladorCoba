@@ -3,7 +3,10 @@ package simulador;
 import java.io.IOException;
 import java.util.Scanner;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.DataInputStream;
+import java.io.EOFException;
 
 public class Simulador {
 
@@ -55,6 +58,44 @@ public class Simulador {
 				System.out.println("error de IO cargando linea " + i);
 				System.exit(1);
 			}
+		}
+		PC = loadTo;
+	}
+
+	private static void loadBin(DataInputStream bin){
+		int loadTo = 0;
+		try {
+			short dir = bin.readShort();
+			loadTo = Short.toUnsignedInt(dir);
+		} catch (EOFException e){
+			System.out.println("el archivo binario estaba vacio");
+			System.exit(1);
+		} catch (IOException e){
+			System.out.println("Error de IO leyendo el short de posicion");
+			System.exit(1);
+		}
+
+		System.out.println("Cargando en posicion " + loadTo);
+
+		for (int i = 0; true; i++) {
+			short b = 0;
+			try{
+				b = bin.readShort();
+			} catch (EOFException e){
+				break;
+			} catch (IOException e){
+				System.out.println("Error de IO leyendo el short numero " + i);
+				System.exit(1);
+			}
+			
+			try{
+				memoria.put(loadTo + i, b);
+			} catch (IOException e){
+				System.out.println("Error de IO escribiendo a memoria " + i);
+				System.exit(1);
+			}
+
+
 		}
 		PC = loadTo;
 	}
@@ -174,11 +215,34 @@ public class Simulador {
 	}
 
 	public static void main(String[] args) throws IOException {
+		memoria.nukeMemory();
+		boolean txt = false;
 		try {
-			File source = new File(args[0]);
-			Scanner scan = new Scanner(source);
-			loadCode(scan);
-			scan.close();
+			if(args[0].equals("bin")){
+				txt = false;
+			} else if (args[0].equals("txt")) {
+				txt = true;
+			} else {
+				System.out.println("): (bin|txt)");
+				System.exit(1);
+			}
+		} catch (ArrayIndexOutOfBoundsException e){
+			System.out.println("Esperaba un argumento definiendo el tipo de archivo de entrada (bin|txt)");
+			System.exit(1);
+		}
+
+		try {
+			if (txt){
+				File source = new File(args[1]);
+				Scanner scan = new Scanner(source);
+				loadCode(scan);
+				scan.close();
+			} else {
+				FileInputStream source = new FileInputStream(args[1]);
+				DataInputStream bin = new DataInputStream(source);
+				loadBin(bin);
+				bin.close();
+			}	
 		} catch (FileNotFoundException e){
 			System.out.println("Archivo no encontrado");
 			System.exit(1);
@@ -186,6 +250,8 @@ public class Simulador {
 			System.out.println("Falta un argumento indicando el archivo que contiene el codigo a ejecutar");
 			System.exit(1);
 		}
+
+		memoria.print(PC, PC+30);
 
 		while (true){
 			short raw = memoria.get(PC);

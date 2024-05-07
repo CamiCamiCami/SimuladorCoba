@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class Memory {
 
-	private static String FILE_NAME = "../memoriaRAM.data";
+	private static String FILE_NAME = "memoria.data";
 	private static RandomAccessFile FILE = null;
 
 	public Memory(){
@@ -41,7 +41,7 @@ public class Memory {
 
 	public void nukeMemory() throws IOException {
 		setDir(0);
-		for(int i = 0; i < 65536; i++){
+		for(int i = 0; i < 0; i++){
 			FILE.writeShort(-24187);
 		}
 	}
