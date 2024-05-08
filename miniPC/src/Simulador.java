@@ -60,7 +60,20 @@ public class Simulador {
 		PC = loadTo;
 	}
 
+	private static void readHeader(DataInputStream bin){
+		try {
+			bin.readShort();
+		} catch (EOFException e){
+			System.out.println("el archivo binario estaba vacio");
+			System.exit(1);
+		} catch (IOException e){
+			System.out.println("Error de IO leyendo el short de posicion");
+			System.exit(1);
+		}
+	}
+
 	private static void loadBin(DataInputStream bin){
+		readHeader(bin);
 		int loadTo = 0;
 		try {
 			short dir = bin.readShort();
