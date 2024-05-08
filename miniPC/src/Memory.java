@@ -1,5 +1,3 @@
-package simulador;
-
 import java.io.RandomAccessFile;
 import java.io.FileNotFoundException;
 import java.io.IOException;

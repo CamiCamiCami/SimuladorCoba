@@ -1,4 +1,4 @@
-package simulador;
+
 
 public class Instruccion {
 
@@ -120,10 +120,19 @@ public class Instruccion {
 	public byte Inm = -1;
 	public byte SH = -1;
 	public byte CC = -1;
-	public byte PCOffset = -1;
+	public short PCOffset = -1;
 	public byte RB = -1;
 	public byte vect = -1;
 
+	private static byte interpreta_inm(int temp, int largo){
+		byte ins = (byte)temp;
+		if((ins >> (largo-1)) == 0){
+			return ins;
+		} else {
+			byte missing_1s = (byte) (0b11111111 << largo);
+			return (byte)(missing_1s + ins);
+		}
+	}
 
 	public Instruccion(short raw){
 		this.OPCODE = Tipo.bin2Tipo(raw);
@@ -146,7 +155,7 @@ public class Instruccion {
 				temp = raw & 0b0000000111000000;
 				this.RS1 = (byte)(temp >> 6);
 				temp = raw & 0b0000000000111111;
-				this.Inm = (byte)temp;
+				this.Inm = (byte)interpreta_inm(temp, 6);
 				break;
 			case ANDI:
 			case ORI:
@@ -220,7 +229,7 @@ public class Instruccion {
 				temp = raw & 0b0000111000000000;
 				this.RD = (byte)(temp >> 9);
 				temp = raw & 0b0000000011111111;
-				this.PCOffset = (byte)temp;
+				this.Inm = (byte)temp;
 				break;
 			default:
 				System.out.print("Problema con el switch, constructor de Instruccion");

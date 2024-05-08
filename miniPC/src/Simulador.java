@@ -1,5 +1,3 @@
-package simulador;
-
 import java.io.IOException;
 import java.util.Scanner;
 import java.io.File;
@@ -173,6 +171,7 @@ public class Simulador {
 				}
 				break;
 			case RETI:
+				PC = Short.toUnsignedInt(r[7]);
 				break;
 			case NOT:
 				r[ins.RD] = (short)(~(r[ins.RS1]));
@@ -180,14 +179,14 @@ public class Simulador {
 				break;
 			case JAL:
 				r[7] = (short)PC;
-				PC += Byte.toUnsignedInt(ins.PCOffset);
+				PC += Short.toUnsignedInt(ins.PCOffset);
 				break;
 			case LD:
-				r[ins.RD] = memoria.get(PC + Byte.toUnsignedInt(ins.PCOffset));
+				r[ins.RD] = memoria.get(PC + Short.toUnsignedInt(ins.PCOffset));
 				last_result = r[ins.RD];
 				break;
 			case ST:
-				memoria.put(PC + Byte.toUnsignedInt(ins.PCOffset), r[ins.RS1]);
+				memoria.put(PC + Short.toUnsignedInt(ins.PCOffset), r[ins.RS1]);
 				last_result = r[ins.RS1];
 				break;
 			case LDR:
@@ -212,6 +211,14 @@ public class Simulador {
 				PC += ins.PCOffset;
 				break;
 		}
+	}
+
+	private static void paso() throws IOException{
+		short raw = memoria.get(PC);
+		PC++;
+		Instruccion ins = new Instruccion(raw);
+		ins.print();
+		runInstruction(ins);
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -253,11 +260,35 @@ public class Simulador {
 
 		memoria.print(PC, PC+30);
 
+		Scanner scan = new Scanner(System.in);
 		while (true){
-			short raw = memoria.get(PC);
-			PC++;
-			Instruccion ins = new Instruccion(raw);
-			runInstruction(ins);
+			for (int i = 0; i < 8; i++) {
+				System.out.println("r[" + i + "] = " + r[i]);
+			}
+
+			String line = scan.next();
+			
+			try {
+				int cant = Integer.parseInt(line, 10);
+				while(cant > 0){
+					paso();
+					cant--;
+				}
+				continue;
+			} catch (NumberFormatException e){}
+	
+			switch (line) {
+				case ">":
+					paso();
+					break;
+				
+				case ">>":
+					while (true) {
+						paso();
+					}
+				default:
+					break;
+			}
 		}
 	}
 }
