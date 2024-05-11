@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.DataInputStream;
 import java.io.EOFException;
+import Memory;
+import Instruccion;
 
 public class Simulador {
 
@@ -177,6 +179,7 @@ public class Simulador {
 				break;
 			case TRAP:
 				if(ins.vect == 0){
+					memoria.print(2000, 2030);
 					memoria.close();
 					System.exit(0);
 				} else {
@@ -203,7 +206,7 @@ public class Simulador {
 				last_result = r[ins.RS1];
 				break;
 			case LDR:
-				r[ins.RD] = memoria.get(r[ins.RS1 + ins.RS2]);
+				r[ins.RD] = memoria.get(r[ins.RS1] + r[ins.RS2]);
 				last_result = r[ins.RD];
 				break;
 			case STR:

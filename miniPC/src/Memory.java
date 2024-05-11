@@ -39,7 +39,7 @@ public class Memory {
 
 	public void nukeMemory() throws IOException {
 		setDir(0);
-		for(int i = 0; i < 0; i++){
+		for(int i = 0; i < (1 << 16); i++){
 			FILE.writeShort(-24187);
 		}
 	}
