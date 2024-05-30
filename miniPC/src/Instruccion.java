@@ -3,28 +3,28 @@
 public class Instruccion {
 
 	protected enum Tipo {
-		ADD(1),
-		SUB(1),
 		AND(1),
 		OR(1),
+		ADD(1),
+		NOT(1),
+		CLS(1),
+		SET(1),
+		SUB(1),
+		SLT(1),
 		ADDI(5),
-		ANDI(4),
-		ORI(9),
-		BR(0),
-		JR(10),
-		JALR(10),
-		TRAP(10),
-		RETI(10),
-		NOT(10),
-		JAL(8),
+		LUI(4),
+		LORI(4),
 		LD(2),
 		ST(3),
 		LDR(6),
-		STR(6),
-		LUI(7),
-		LORI(7),
-		LJMP(11);
-
+		STR(7),
+		BR(0),
+		JAL(8),
+		JR(10),
+		JALR(10),
+		TRAP(10),
+		RETI(10);
+		
 		public final int opcode;
 
 		private Tipo(int opcode){
@@ -38,34 +38,33 @@ public class Instruccion {
 
 			switch (opcode){
 				case 1:
-					id = raw & 0b0000000000011000;
-					id = id >> 3;
+					id = raw & 0b0000000000000111;
 					switch (id){
 						case 0:
-							return ADD;
-						case 1:
-							return SUB;
-						case 2:
 							return AND;
-						case 3:
+						case 1:
 							return OR;
+						case 2:
+							return ADD;
+						case 3:
+							return NOT;
+						case 4:
+							return CLS;
+						case 5:
+							return SET;
+						case 6:
+							return SUB;
+						case 7: 
+							return SLT;
 						default:
 							System.out.print("Problema en el primer Switch anidado, bin2Tipo");
 							System.exit(1);
 					}
 				case 5:
 					return ADDI;
-				case 4:
-					return ANDI;
-				case 9:
-					return ORI;
 				case 0:
 					return BR;
 				case 10:
-					b = raw & 0b0000000000100000;
-					if (b != 0){
-						return NOT;
-					}
 					id = raw & 0b0000110000000000;
 					id = id >> 10;
 					switch (id){
@@ -88,21 +87,16 @@ public class Instruccion {
 				case 3:
 					return ST;
 				case 6:
-					b = raw & 0b0000000000100000;
-					if (b == 0){
-						return LDR;
-					} else {
-						return STR;
-					}
+					return LDR;
 				case 7:
+					return STR;
+				case 4:
 					b = raw & 0b0000000100000000;
 					if (b == 0){
 						return LUI;
 					} else {
 						return LORI;
 					}
-				case 11:
-					return LJMP;
 				default:
 					System.out.print("Se trato de usar un opcode reservado");
 					System.exit(1);
@@ -124,7 +118,7 @@ public class Instruccion {
 	public byte RB = -1;
 	public byte vect = -1;
 
-	private static byte interpreta_inm(int temp, int largo){
+	private static byte extend_sign(int temp, int largo){
 		byte ins = (byte)temp;
 		if((ins >> (largo-1)) == 0){
 			return ins;
@@ -142,12 +136,16 @@ public class Instruccion {
 			case SUB:
 			case AND:
 			case OR:
+			case NOT:
+			case CLS:
+			case SET:
+			case SLT:
 				temp = raw & 0b0000111000000000;
 				this.RD = (byte)(temp >> 9);
 				temp = raw & 0b0000000111000000;
 				this.RS1 = (byte)(temp >> 6);
-				temp = raw & 0b0000000000000111;
-				this.RS2 = (byte)temp;
+				temp = raw & 0b0000000000111000;
+				this.RS2 = (byte)(temp >> 3);
 				break;
 			case ADDI:
 				temp = raw & 0b0000111000000000;
@@ -155,24 +153,52 @@ public class Instruccion {
 				temp = raw & 0b0000000111000000;
 				this.RS1 = (byte)(temp >> 6);
 				temp = raw & 0b0000000000111111;
-				this.Inm = (byte)interpreta_inm(temp, 6);
+				this.Inm = (byte)extend_sign(temp, 6);
 				break;
-			case ANDI:
-			case ORI:
+			case LUI:
+			case LORI:
+				temp = raw & 0b0000111000000000;
+				this.RD = (byte)(temp >> 9);
+				temp = raw & 0b0000000011111111;
+				this.Inm = (byte)temp;
+				break;
+			case LD:
+				temp = raw & 0b0000111000000000;
+				this.RD = (byte)(temp >> 9);
+				temp = raw & 0b0000000111111111;
+				this.PCOffset = (byte)extend_sign(temp, 9);
+				break;
+			case ST:
+				temp = raw & 0b0000111000000000;
+				this.RS1 = (byte)(temp >> 9);
+				temp = raw & 0b0000000111111111;
+				this.PCOffset = (byte)extend_sign(temp, 9);
+				break;
+			case LDR:
 				temp = raw & 0b0000111000000000;
 				this.RD = (byte)(temp >> 9);
 				temp = raw & 0b0000000111000000;
 				this.RS1 = (byte)(temp >> 6);
-				temp = raw & 0b0000000000110000;
-				this.SH = (byte)(temp >> 4);
-				temp = raw & 0b0000000000001111;
-				this.Inm = (byte)temp;
+				temp = raw & 0b0000000000111111;
+				this.PCOffset = extend_sign(temp, 6);
+				break;
+			case STR:
+				temp = raw & 0b0000111000000000;
+				this.RS3 = (byte)(temp >> 9);
+				temp = raw & 0b0000000111000000;
+				this.RS1 = (byte)(temp >> 6);
+				temp = raw & 0b0000000000111111;
+				this.PCOffset = extend_sign(temp, 6);
 				break;
 			case BR:
 				temp = raw & 0b0000110000000000;
 				this.CC = (byte)(temp >> 10);
 				temp = raw & 0b0000001111111111;
-				this.PCOffset = (byte)temp;
+				this.PCOffset = (byte)extend_sign(temp, 10);
+				break;
+			case JAL:
+				temp = raw & 0b0000111111111111;
+				this.PCOffset = (byte)extend_sign(temp, 12);
 				break;
 			case JR:
 			case JALR:
@@ -184,52 +210,6 @@ public class Instruccion {
 				this.vect = (byte)(temp >> 6);
 				break;
 			case RETI:
-				break;
-			case NOT:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000111000000;
-				this.RS1 = (byte)(temp >> 6);
-				break;
-			case JAL:
-			case LJMP:
-				temp = raw & 0b0000111111111111;
-				this.PCOffset = (byte)temp;
-				break;
-			case LD:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000111111111;
-				this.PCOffset = (byte)temp;
-				break;
-			case ST:
-				temp = raw & 0b0000111000000000;
-				this.RS1 = (byte)(temp >> 9);
-				temp = raw & 0b0000000111111111;
-				this.PCOffset = (byte)temp;
-				break;
-			case LDR:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000111000000;
-				this.RS1 = (byte)(temp >> 6);
-				temp = raw & 0b0000000000000111;
-				this.RS2 = (byte)(temp);
-				break;
-			case STR:
-				temp = raw & 0b0000111000000000;
-				this.RS3 = (byte)(temp >> 9);
-				temp = raw & 0b0000000111000000;
-				this.RS1 = (byte)(temp >> 6);
-				temp = raw & 0b0000000000000111;
-				this.RS2 = (byte)(temp);
-				break;
-			case LUI:
-			case LORI:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000011111111;
-				this.Inm = (byte)temp;
 				break;
 			default:
 				System.out.print("Problema con el switch, constructor de Instruccion");

@@ -5,7 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.DataInputStream;
 import java.io.EOFException;
-import Memory;
+import Memorym;
 import Instruccion;
 
 public class Simulador {
@@ -131,21 +131,56 @@ public class Simulador {
 				r[ins.RD] = (short)(r[ins.RS1] | r[ins.RS2]);
 				last_result = r[ins.RD];
 				break;
+			case NOT:
+				r[ins.RD] = (short)(~(r[ins.RS1]));
+				last_result = r[ins.RD];
+				break;
+			case CLS:
+				r[ins.RD] = (short) 0xFFFF;
+				last_result = r[ins.RD];
+				break;
+			case SET:
+				r[ins.RD] = (short) 0;
+				last_result = r[ins.RD];
+				break;
+			case SLT:
+				if (r[ins.RS1] < r[ins.RS2]) {
+					r[ins.RD] = (short)1;
+					last_result = r[ins.RD];
+				} else {
+					r[ins.RD] = (short)0;
+					last_result = r[ins.RD];
+				}
+				break;
 			case ADDI:
 				r[ins.RD] = (short)(r[ins.RS1] + ins.Inm);
 				last_result = r[ins.RD];
 				break;
-			case ANDI:
-				short and_pos_inm = (short)(ins.Inm << (ins.SH*4));
-				short and_ext_inm = (short)(0b1111111111111111 & (and_pos_inm));
-				r[ins.RD] = (short)(r[ins.RS1] & and_ext_inm);
+			case LUI:
+				r[ins.RD] = (short)(r[ins.RD] & 0b0000000011111111);
+				r[ins.RD] += (byte)(ins.Inm << 8);
 				last_result = r[ins.RD];
 				break;
-			case ORI:
-				short or_pos_inm = (short)(ins.Inm << (ins.SH*4));
-				short or_ext_inm = (short)(0b0000000000000000 | (or_pos_inm));
-				r[ins.RD] = (short)(r[ins.RS1] | or_ext_inm);
+			case LORI:
+				r[ins.RD] = (short)(r[ins.RD] & 0b1111111100000000);
+				r[ins.RD] += (byte)(ins.Inm);
 				last_result = r[ins.RD];
+				break;
+			case LD:
+				r[ins.RD] = memoria.get(PC + Short.toUnsignedInt(ins.PCOffset));
+				last_result = r[ins.RD];
+				break;
+			case ST:
+				memoria.put(PC + Short.toUnsignedInt(ins.PCOffset), r[ins.RS1]);
+				last_result = r[ins.RS1];
+				break;
+			case LDR:
+				r[ins.RD] = memoria.get(r[ins.RS1] + ins.PCOffset);
+				last_result = r[ins.RD];
+				break;
+			case STR:
+				memoria.put(r[ins.RS1] + ins.PCOffset, r[ins.RS3]);
+				last_result = r[ins.RS1];
 				break;
 			case BR:
 				switch (ins.CC) {
@@ -189,42 +224,9 @@ public class Simulador {
 			case RETI:
 				PC = Short.toUnsignedInt(r[7]);
 				break;
-			case NOT:
-				r[ins.RD] = (short)(~(r[ins.RS1]));
-				last_result = r[ins.RD];
-				break;
 			case JAL:
 				r[7] = (short)PC;
 				PC += Short.toUnsignedInt(ins.PCOffset);
-				break;
-			case LD:
-				r[ins.RD] = memoria.get(PC + Short.toUnsignedInt(ins.PCOffset));
-				last_result = r[ins.RD];
-				break;
-			case ST:
-				memoria.put(PC + Short.toUnsignedInt(ins.PCOffset), r[ins.RS1]);
-				last_result = r[ins.RS1];
-				break;
-			case LDR:
-				r[ins.RD] = memoria.get(r[ins.RS1] + r[ins.RS2]);
-				last_result = r[ins.RD];
-				break;
-			case STR:
-				memoria.put(r[ins.RS2] + r[ins.RS3], r[ins.RS1]);
-				last_result = r[ins.RS1];
-				break;
-			case LUI:
-				r[ins.RD] = (short)(r[ins.RD] & 0b0000000011111111);
-				r[ins.RD] += (byte)(ins.Inm << 8);
-				last_result = r[ins.RD];
-				break;
-			case LORI:
-				r[ins.RD] = (short)(r[ins.RD] & 0b1111111100000000);
-				r[ins.RD] += (byte)(ins.Inm);
-				last_result = r[ins.RD];
-				break;
-			case LJMP:
-				PC += ins.PCOffset;
 				break;
 		}
 	}
