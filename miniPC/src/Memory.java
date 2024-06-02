@@ -49,7 +49,7 @@ public class Memory {
 		FILE = null;
 	}
 
-	private String toWordString(short n){
+	public static String toWordString(short n){
 		String bin = Integer.toBinaryString((int)n);
 		while (bin.length() < 16){
 			bin = "0" + bin;
@@ -65,7 +65,7 @@ public class Memory {
 		for (int i=start; i < end; i++){
 			short cont = FILE.readShort();
 			String bin = toWordString(cont);
-			System.out.print(bin + "\n");
+			System.out.println(bin);
 		}
 	}
 

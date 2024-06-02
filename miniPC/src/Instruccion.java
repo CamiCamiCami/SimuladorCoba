@@ -90,9 +90,9 @@ public class Instruccion {
 				case 6:
 					b = raw & 0b0000000000100000;
 					if (b == 0){
-						return LDR;
-					} else {
 						return STR;
+					} else {
+						return LDR;
 					}
 				case 7:
 					b = raw & 0b0000000100000000;

@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.DataInputStream;
 import java.io.EOFException;
-import Memory;
-import Instruccion;
 
 public class Simulador {
 
@@ -15,6 +13,7 @@ public class Simulador {
 	private static Memory memoria = new Memory();
 	private static final int PALABRA = 16;
 	private static short last_result;
+	private static StringBuffer out = new StringBuffer();
 
 	private static String filterNonBinary(String str){
 		StringBuilder builder = new StringBuilder(str.length());
@@ -178,12 +177,14 @@ public class Simulador {
 				PC = Short.toUnsignedInt(r[ins.RB]);
 				break;
 			case TRAP:
+				// Temporal
 				if(ins.vect == 0){
-					memoria.print(2000, 2030);
+					memoria.print(0, 50);
+					print_out();
 					memoria.close();
 					System.exit(0);
 				} else {
-					System.out.println(r[0]);
+					out.append((char) r[0]);
 				}
 				break;
 			case RETI:
@@ -210,7 +211,7 @@ public class Simulador {
 				last_result = r[ins.RD];
 				break;
 			case STR:
-				memoria.put(r[ins.RS2] + r[ins.RS3], r[ins.RS1]);
+				memoria.put(r[ins.RS2] + r[ins.RS1], r[ins.RS3]);
 				last_result = r[ins.RS1];
 				break;
 			case LUI:
@@ -235,6 +236,17 @@ public class Simulador {
 		Instruccion ins = new Instruccion(raw);
 		ins.print();
 		runInstruction(ins);
+	}
+
+	private static void print_out() {
+		System.out.print("# ");
+		for (char c : out.toString().toCharArray()) {
+			System.out.print(c);
+			if (c == '\n') {
+				System.out.print("# ");
+			}
+		}
+		System.out.println();
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -296,6 +308,7 @@ public class Simulador {
 			switch (line) {
 				case ">":
 					paso();
+					print_out();
 					break;
 				
 				case ">>":
