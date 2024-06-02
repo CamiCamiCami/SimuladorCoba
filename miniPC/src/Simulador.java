@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.DataInputStream;
 import java.io.EOFException;
+import Memorym;
+import Instruccion;
 
 public class Simulador {
 
@@ -13,7 +15,6 @@ public class Simulador {
 	private static Memory memoria = new Memory();
 	private static final int PALABRA = 16;
 	private static short last_result;
-	private static StringBuffer out = new StringBuffer();
 
 	private static String filterNonBinary(String str){
 		StringBuilder builder = new StringBuilder(str.length());
@@ -130,21 +131,56 @@ public class Simulador {
 				r[ins.RD] = (short)(r[ins.RS1] | r[ins.RS2]);
 				last_result = r[ins.RD];
 				break;
+			case NOT:
+				r[ins.RD] = (short)(~(r[ins.RS1]));
+				last_result = r[ins.RD];
+				break;
+			case CLS:
+				r[ins.RD] = (short) 0xFFFF;
+				last_result = r[ins.RD];
+				break;
+			case SET:
+				r[ins.RD] = (short) 0;
+				last_result = r[ins.RD];
+				break;
+			case SLT:
+				if (r[ins.RS1] < r[ins.RS2]) {
+					r[ins.RD] = (short)1;
+					last_result = r[ins.RD];
+				} else {
+					r[ins.RD] = (short)0;
+					last_result = r[ins.RD];
+				}
+				break;
 			case ADDI:
 				r[ins.RD] = (short)(r[ins.RS1] + ins.Inm);
 				last_result = r[ins.RD];
 				break;
-			case ANDI:
-				short and_pos_inm = (short)(ins.Inm << (ins.SH*4));
-				short and_ext_inm = (short)(0b1111111111111111 & (and_pos_inm));
-				r[ins.RD] = (short)(r[ins.RS1] & and_ext_inm);
+			case LUI:
+				r[ins.RD] = (short)(r[ins.RD] & 0b0000000011111111);
+				r[ins.RD] += (byte)(ins.Inm << 8);
 				last_result = r[ins.RD];
 				break;
-			case ORI:
-				short or_pos_inm = (short)(ins.Inm << (ins.SH*4));
-				short or_ext_inm = (short)(0b0000000000000000 | (or_pos_inm));
-				r[ins.RD] = (short)(r[ins.RS1] | or_ext_inm);
+			case LORI:
+				r[ins.RD] = (short)(r[ins.RD] & 0b1111111100000000);
+				r[ins.RD] += (byte)(ins.Inm);
 				last_result = r[ins.RD];
+				break;
+			case LD:
+				r[ins.RD] = memoria.get(PC + Short.toUnsignedInt(ins.PCOffset));
+				last_result = r[ins.RD];
+				break;
+			case ST:
+				memoria.put(PC + Short.toUnsignedInt(ins.PCOffset), r[ins.RS1]);
+				last_result = r[ins.RS1];
+				break;
+			case LDR:
+				r[ins.RD] = memoria.get(r[ins.RS1] + ins.PCOffset);
+				last_result = r[ins.RD];
+				break;
+			case STR:
+				memoria.put(r[ins.RS1] + ins.PCOffset, r[ins.RS3]);
+				last_result = r[ins.RS1];
 				break;
 			case BR:
 				switch (ins.CC) {
@@ -177,55 +213,20 @@ public class Simulador {
 				PC = Short.toUnsignedInt(r[ins.RB]);
 				break;
 			case TRAP:
-				// Temporal
 				if(ins.vect == 0){
-					memoria.print(0, 50);
-					print_out();
+					memoria.print(2000, 2030);
 					memoria.close();
 					System.exit(0);
 				} else {
-					out.append((char) r[0]);
+					System.out.println(r[0]);
 				}
 				break;
 			case RETI:
 				PC = Short.toUnsignedInt(r[7]);
 				break;
-			case NOT:
-				r[ins.RD] = (short)(~(r[ins.RS1]));
-				last_result = r[ins.RD];
-				break;
 			case JAL:
 				r[7] = (short)PC;
 				PC += Short.toUnsignedInt(ins.PCOffset);
-				break;
-			case LD:
-				r[ins.RD] = memoria.get(PC + Short.toUnsignedInt(ins.PCOffset));
-				last_result = r[ins.RD];
-				break;
-			case ST:
-				memoria.put(PC + Short.toUnsignedInt(ins.PCOffset), r[ins.RS1]);
-				last_result = r[ins.RS1];
-				break;
-			case LDR:
-				r[ins.RD] = memoria.get(r[ins.RS1] + r[ins.RS2]);
-				last_result = r[ins.RD];
-				break;
-			case STR:
-				memoria.put(r[ins.RS2] + r[ins.RS1], r[ins.RS3]);
-				last_result = r[ins.RS1];
-				break;
-			case LUI:
-				r[ins.RD] = (short)(r[ins.RD] & 0b0000000011111111);
-				r[ins.RD] += (byte)(ins.Inm << 8);
-				last_result = r[ins.RD];
-				break;
-			case LORI:
-				r[ins.RD] = (short)(r[ins.RD] & 0b1111111100000000);
-				r[ins.RD] += (byte)(ins.Inm);
-				last_result = r[ins.RD];
-				break;
-			case LJMP:
-				PC += ins.PCOffset;
 				break;
 		}
 	}
@@ -236,17 +237,6 @@ public class Simulador {
 		Instruccion ins = new Instruccion(raw);
 		ins.print();
 		runInstruction(ins);
-	}
-
-	private static void print_out() {
-		System.out.print("# ");
-		for (char c : out.toString().toCharArray()) {
-			System.out.print(c);
-			if (c == '\n') {
-				System.out.print("# ");
-			}
-		}
-		System.out.println();
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -308,7 +298,6 @@ public class Simulador {
 			switch (line) {
 				case ">":
 					paso();
-					print_out();
 					break;
 				
 				case ">>":
@@ -321,3 +310,4 @@ public class Simulador {
 		}
 	}
 }
+>>>>>>> 5f633aa43652370116e1a7a375317689f05b3f02
