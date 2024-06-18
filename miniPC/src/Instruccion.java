@@ -4,9 +4,9 @@ public class Instruccion {
 		AND(1),
 		OR(1),
 		ADD(1),
-		NOT(1),
-		CLS(1),
-		SET(1),
+		NOR(1),
+		ANN(1),
+		XOR(1),
 		SUB(1),
 		SLT(1),
 		ADDI(5),
@@ -17,11 +17,12 @@ public class Instruccion {
 		LDR(6),
 		STR(7),
 		BR(0),
-		JAL(8),
-		JR(10),
-		JALR(10),
+		JUMP(8),
+		JR(8),
+		JAL(9),
+		JALR(9),
 		TRAP(10),
-		RETI(10);
+		RTI(11);
 		
 		public final int opcode;
 
@@ -45,11 +46,11 @@ public class Instruccion {
 						case 2:
 							return ADD;
 						case 3:
-							return NOT;
+							return NOR;
 						case 4:
-							return CLS;
+							return ANN;
 						case 5:
-							return SET;
+							return XOR;
 						case 6:
 							return SUB;
 						case 7: 
@@ -60,26 +61,9 @@ public class Instruccion {
 					}
 				case 5:
 					return ADDI;
-				case 0:
-					return BR;
-				case 10:
-					id = raw & 0b0000110000000000;
-					id = id >> 10;
-					switch (id){
-						case 0:
-							return JR;
-						case 1:
-							return JALR;
-						case 2:
-							return TRAP;
-						case 3:
-							return RETI;
-						default:
-							System.out.print("Problema en el segundo Switch anidado, bin2Tipo");
-							System.exit(1);
-					}
-				case 8:
-					return JAL;
+				case 4:
+					b = raw & 0b0000000100000000;
+					return b ? LORI : LUI;
 				case 2:
 					return LD;
 				case 3:
@@ -88,13 +72,18 @@ public class Instruccion {
 					return LDR;
 				case 7:
 					return STR;
-				case 4:
-					b = raw & 0b0000000100000000;
-					if (b == 0){
-						return LUI;
-					} else {
-						return LORI;
-					}
+				case 0:
+					return BR;
+				case 8:
+					b = raw & 0b0000100000000000;
+					return b ? JUMP : JR;
+				case 9:
+					b = raw & 0b0000100000000000;
+					return b ? JAL : JALR;
+				case 10:
+					return TRAP;
+				case 11:
+					return RTI;
 				default:
 					System.out.print("Se trato de usar un opcode reservado");
 					System.exit(1);
@@ -111,7 +100,7 @@ public class Instruccion {
 	public byte RS3 = -1;
 	public byte Inm = -1;
 	public byte SH = -1;
-	public byte CC = -1;
+	public byte NZP = -1;
 	public short PCOffset = -1;
 	public byte RB = -1;
 	public byte vect = -1;
@@ -134,9 +123,9 @@ public class Instruccion {
 			case SUB:
 			case AND:
 			case OR:
-			case NOT:
-			case CLS:
-			case SET:
+			case NOR:
+			case XOR:
+			case ANN:
 			case SLT:
 				temp = raw & 0b0000111000000000;
 				this.RD = (byte)(temp >> 9);
@@ -161,28 +150,16 @@ public class Instruccion {
 				this.Inm = (byte)temp;
 				break;
 			case LD:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000111111111;
-				this.PCOffset = (byte)extend_sign(temp, 9);
-				break;
 			case ST:
 				temp = raw & 0b0000111000000000;
-				this.RS1 = (byte)(temp >> 9);
+				this.RD = (byte)(temp >> 9);
 				temp = raw & 0b0000000111111111;
 				this.PCOffset = (byte)extend_sign(temp, 9);
 				break;
 			case LDR:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000111000000;
-				this.RS1 = (byte)(temp >> 6);
-				temp = raw & 0b0000000000111111;
-				this.PCOffset = extend_sign(temp, 6);
-				break;
 			case STR:
 				temp = raw & 0b0000111000000000;
-				this.RS3 = (byte)(temp >> 9);
+				this.RD = (byte)(temp >> 9);
 				temp = raw & 0b0000000111000000;
 				this.RS1 = (byte)(temp >> 6);
 				temp = raw & 0b0000000000111111;
