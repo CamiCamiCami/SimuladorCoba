@@ -166,14 +166,15 @@ public class Instruccion {
 				this.PCOffset = extend_sign(temp, 6);
 				break;
 			case BR:
-				temp = raw & 0b0000110000000000;
-				this.CC = (byte)(temp >> 10);
-				temp = raw & 0b0000001111111111;
-				this.PCOffset = (byte)extend_sign(temp, 10);
+				temp = raw & 0b0000111000000000;
+				this.NZP = (byte)(temp >> 9);
+				temp = raw & 0b0000000111111111;
+				this.PCOffset = (byte)extend_sign(temp, 9);
 				break;
+			case JUMP:
 			case JAL:
-				temp = raw & 0b0000111111111111;
-				this.PCOffset = (byte)extend_sign(temp, 12);
+				temp = raw & 0b0000011111111111;
+				this.PCOffset = (byte)extend_sign(temp, 11);
 				break;
 			case JR:
 			case JALR:
