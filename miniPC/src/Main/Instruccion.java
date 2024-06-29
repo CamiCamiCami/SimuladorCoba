@@ -163,28 +163,16 @@ public class Instruccion {
 				this.Inm = (byte)temp;
 				break;
 			case LD:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000111111111;
-				this.PCOffset = (byte)extend_sign(temp, 9);
-				break;
 			case ST:
 				temp = raw & 0b0000111000000000;
-				this.RS1 = (byte)(temp >> 9);
+				this.RD = (byte)(temp >> 9);
 				temp = raw & 0b0000000111111111;
 				this.PCOffset = (byte)extend_sign(temp, 9);
 				break;
 			case LDR:
-				temp = raw & 0b0000111000000000;
-				this.RD = (byte)(temp >> 9);
-				temp = raw & 0b0000000111000000;
-				this.RS1 = (byte)(temp >> 6);
-				temp = raw & 0b0000000000111111;
-				this.PCOffset = extend_sign(temp, 6);
-				break;
 			case STR:
 				temp = raw & 0b0000111000000000;
-				this.RS3 = (byte)(temp >> 9);
+				this.RD = (byte)(temp >> 9);
 				temp = raw & 0b0000000111000000;
 				this.RS1 = (byte)(temp >> 6);
 				temp = raw & 0b0000000000111111;
